@@ -1,25 +1,34 @@
-# This is a template for a Ruby scraper on morph.io (https://morph.io)
-# including some code snippets below that you should find helpful
+require 'scraperwiki'
+require 'nokogiri'
+require 'open-uri'
+data_exists = ScraperWiki.select("count(*) FROM sqlite_master WHERE type='table' AND name='swdata';")[0]["count(*)"]> 0
 
-# require 'scraperwiki'
-# require 'mechanize'
-#
-# agent = Mechanize.new
-#
-# # Read in a page
-# page = agent.get("http://foo.com")
-#
-# # Find somehing on the page using css selectors
-# p page.at('div.content')
-#
-# # Write out to the sqlite database using scraperwiki library
-# ScraperWiki.save_sqlite(["name"], {"name" => "susan", "occupation" => "software developer"})
-#
-# # An arbitrary query against the database
-# ScraperWiki.select("* from data where 'name'='peter'")
+#  doc = Nokogiri::HTML(File.read(input_filename))
+doc = Nokogiri::HTML(open("http://www.cmd.act.gov.au/open_government/inform/find-a-public-notice/all-public-notices"))
+doc.xpath('//tbody/tr').each do |row|
 
-# You don't have to do things with the Mechanize or ScraperWiki libraries.
-# You can use whatever gems you want: https://morph.io/documentation/ruby
-# All that matters is that your final data is written to an SQLite database
-# called "data.sqlite" in the current working directory which has at least a table
-# called "data".
+  data = {}
+  row.xpath('td').each do |col|
+    data[col.attributes['data-title'].to_s.gsub(' ', '_').downcase] = col.text
+  end
+  link = row.search('a')[0]
+  data['public_notice_title'] = link.text
+  data['public_notice_url'] = link.attributes['href'].to_s
+  #p data
+
+  if data_exists
+    existing = ScraperWiki.select("count(*) from swdata where public_notice_url='"+data['public_notice_url']+"'")[0]["count(*)"]> 0
+  end
+  if not existing or not data_exists
+    p data['public_notice_url']
+    details = Nokogiri::HTML(open(data['public_notice_url']))
+    data['details'] = details.css(".position-details").to_s
+    data['details_text'] = details.css(".position-details").text.strip!
+  end
+
+  # Write out to the sqlite database using scraperwiki library
+  ScraperWiki.save_sqlite(['public_notice_url'], data)
+
+end
+
+
