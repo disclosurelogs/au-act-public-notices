@@ -1,7 +1,7 @@
 require 'scraperwiki'
 require 'nokogiri'
 require 'open-uri'
-data_exists = ScraperWiki.select("count(*) FROM sqlite_master WHERE type='table' AND name='swdata';")[0]["count(*)"]> 0
+data_exists = ScraperWiki.select("count(*) FROM sqlite_master WHERE type='table' AND name='data';")[0]["count(*)"]> 0
 
 #  doc = Nokogiri::HTML(File.read(input_filename))
 doc = Nokogiri::HTML(open("http://www.cmd.act.gov.au/open_government/inform/find-a-public-notice/all-public-notices"))
@@ -17,7 +17,7 @@ doc.xpath('//tbody/tr').each do |row|
   #p data
 
   if data_exists
-    existing = ScraperWiki.select("count(*) from swdata where public_notice_url='"+data['public_notice_url']+"'")[0]["count(*)"]> 0
+    existing = ScraperWiki.select("count(*) from data where public_notice_url='"+data['public_notice_url']+"'")[0]["count(*)"]> 0
   end
   if not existing or not data_exists
     p data['public_notice_url']
