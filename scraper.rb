@@ -17,17 +17,16 @@ doc.xpath('//tbody/tr').each do |row|
   #p data
 
   if data_exists
-    existing = ScraperWiki.select("count(*) from data where public_notice_url='"+data['public_notice_url']+"'")[0]["count(*)"]> 0
+    existing = ScraperWiki.select("count(*) from data where public_notice_url='"+data['public_notice_url']+"' and details != ''")[0]["count(*)"]> 0
   end
   if not existing or not data_exists
     p data['public_notice_url']
     details = Nokogiri::HTML(open(data['public_notice_url']))
     data['details'] = details.css(".position-details").to_s
     data['details_text'] = details.css(".position-details").text.strip!
+    # Write out to the sqlite database using scraperwiki library
+    ScraperWiki.save_sqlite(['public_notice_url'], data)
   end
-
-  # Write out to the sqlite database using scraperwiki library
-  ScraperWiki.save_sqlite(['public_notice_url'], data)
 
 end
 
