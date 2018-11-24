@@ -4,7 +4,7 @@ require 'open-uri'
 data_exists = ScraperWiki.select("count(*) FROM sqlite_master WHERE type='table' AND name='data';")[0]["count(*)"]> 0
 
 #  doc = Nokogiri::HTML(File.read(input_filename))
-doc = Nokogiri::HTML(open("http://www.cmd.act.gov.au/open_government/inform/find-a-public-notice/all-public-notices"))
+doc = Nokogiri::HTML(open("https://www.cmtedd.act.gov.au/open_government/inform/find-a-public-notice/all-public-notices"))
 doc.xpath('//tbody/tr').each do |row|
 
   data = {}
